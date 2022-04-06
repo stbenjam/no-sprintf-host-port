@@ -1,8 +1,11 @@
-all: plugin
-.PHONY: all plugin
+all: gosprintfhostport.so
+.PHONY: lint
+
+clean:
+	rm gosprintfhostport.so
 
 lint:
 	golangci-lint run ./...
 
-plugin:
+gosprintfhostport.so:
 	go build -buildmode=plugin plugin/gosprintfhostport.go

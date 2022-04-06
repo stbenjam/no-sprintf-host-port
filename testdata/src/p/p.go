@@ -12,6 +12,10 @@ func _() {
 
 	_ = fmt.Sprintf("http://%s/foo", net.JoinHostPort("foo", "80"))
 
+	_ = fmt.Sprintf("http://api.%s:6443/foo", "example.com")
+
+	_ = fmt.Sprintf("http://api.%s/foo", "example.com")
+
 	_ = fmt.Sprintf("telnet+ssl://%s/foo", net.JoinHostPort("foo", "80"))
 
 	_ = fmt.Sprintf("http://%s/foo:bar", net.JoinHostPort("foo", "80"))
@@ -26,10 +30,12 @@ func _() {
 
 	_ = fmt.Sprintf("https://user@%s:%d", "myHost", 8443) // want "should be constructed with net.JoinHostPort"
 
+	_ = fmt.Sprintf("postgres://%s:%s@%s:5050/%s", "foo", "bar", "baz", "qux") // want "should be constructed with net.JoinHostPort"
+
 	_ = fmt.Sprintf("https://%s:%d", "myHost", 8443) // want "should be constructed with net.JoinHostPort"
 
 	_ = fmt.Sprintf("https://%s:9211", "myHost") // want "should be constructed with net.JoinHostPort"
 
-	routerIP := "fd00::1"
-	_ = fmt.Sprintf("http://%s:1936/healthz", routerIP) // want "should be constructed with net.JoinHostPort"
+	ip := "fd00::1"
+	_ = fmt.Sprintf("http://%s:1936/healthz", ip) // want "should be constructed with net.JoinHostPort"
 }
