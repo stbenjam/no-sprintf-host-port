@@ -15,4 +15,4 @@ func (*analyzerPlugin) GetAnalyzers() []*analysis.Analyzer {
 }
 
 // This must be defined and named 'AnalyzerPlugin'
-var AnalyzerPlugin analyzerPlugin
+var AnalyzerPlugin analyzerPlugin //nolint

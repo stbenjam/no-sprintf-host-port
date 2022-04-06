@@ -1,8 +1,10 @@
 all: gosprintfhostport.so
-.PHONY: lint
-
+.PHONY: lint test
 clean:
 	rm gosprintfhostport.so
+
+test:
+	go test ./...
 
 lint:
 	golangci-lint run ./...
