@@ -56,14 +56,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		fs := fsRaw.Value[1 : len(fsRaw.Value)-1]
 
 		regexes := []*regexp.Regexp{
-			// - Check to see if it looks like a URI with a port, basically scheme://%s:<something else>
-			//		- Scheme, as per RFC3986 is ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-			//		- A format string substitution in the host portion
+			// These check to see if it looks like a URI with a port, basically scheme://%s:<something else>,
+			// or scheme://user:pass@%s:<something else>.
+			// Matching requirements:
+			//		- Scheme as per RFC3986 is ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+			//		- A format string substitution in the host portion, preceded by an optional username/password@
 			//  	- A colon indicating a port will be specified
-			regexp.MustCompile(`[a-zA-Z0-9+-.]*://%s:.*`),
-
-			// Same as above, but allowing a username/password
-			regexp.MustCompile(`[a-zA-Z0-9+-.]*://[^/]*@%s:.*`),
+			regexp.MustCompile(`^[a-zA-Z0-9+-.]*://%s:[^@]*$`),
+			regexp.MustCompile(`^[a-zA-Z0-9+-.]*://[^/]*@%s:.*$`),
 		}
 
 		for _, re := range regexes {

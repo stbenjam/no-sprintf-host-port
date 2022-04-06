@@ -8,6 +8,8 @@ import (
 func _() {
 	_ = fmt.Sprintf("gopher://%s/foo", net.JoinHostPort("foo", "80"))
 
+	_ = fmt.Sprintf("postgres://%s:%s@127.0.0.1/%s", "foo", "bar", "baz")
+
 	_ = fmt.Sprintf("http://%s/foo", net.JoinHostPort("foo", "80"))
 
 	_ = fmt.Sprintf("telnet+ssl://%s/foo", net.JoinHostPort("foo", "80"))
