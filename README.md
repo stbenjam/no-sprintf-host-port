@@ -1,6 +1,6 @@
-# go-sprintf-host-port 
+# no-sprintf-host-port 
 
-The Go linter go-sprintf-host-port checks that sprintf is not used to
+The Go linter no-sprintf-host-port checks that sprintf is not used to
 construct a host:port combination in a URL.    A frequent pattern is for a
 developer to construct a URL like this:
 
