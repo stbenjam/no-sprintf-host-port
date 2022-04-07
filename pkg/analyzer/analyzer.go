@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"regexp"
@@ -12,8 +13,8 @@ import (
 )
 
 var Analyzer = &analysis.Analyzer{
-	Name:     "gosprintfhostport",
-	Doc:      "Checks that sprintf is not used to construct a host:port combination in a URL.",
+	Name:     "nosprintfhostport",
+	Doc:      "Checks for misuse of Sprintf to construct a host with port in a URL.",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
@@ -26,53 +27,70 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 	inspector.Preorder(nodeFilter, func(node ast.Node) {
 		callExpr := node.(*ast.CallExpr)
-
-		selector, ok := callExpr.Fun.(*ast.SelectorExpr)
-		if !ok {
-			return
-		}
-		pkg, ok := selector.X.(*ast.Ident)
-		if !ok {
-			return
-		}
-		if pkg.Name != "fmt" || selector.Sel.Name != "Sprintf" {
-			return
-		}
-
-		if len(callExpr.Args) < 2 {
-			return
-		}
-
-		// Let's see if our format string is a string literal.
-		fsRaw, ok := callExpr.Args[0].(*ast.BasicLit)
-		if !ok {
-			return
-		}
-		if fsRaw.Kind != token.STRING {
-			return
-		}
-
-		// Remove quotes
-		fs := fsRaw.Value[1 : len(fsRaw.Value)-1]
-
-		regexes := []*regexp.Regexp{
-			// These check to see if it looks like a URI with a port, basically scheme://%s:<something else>,
-			// or scheme://user:pass@%s:<something else>.
-			// Matching requirements:
-			//		- Scheme as per RFC3986 is ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-			//		- A format string substitution in the host portion, preceded by an optional username/password@
-			//  	- A colon indicating a port will be specified
-			regexp.MustCompile(`^[a-zA-Z0-9+-.]*://%s:[^@]*$`),
-			regexp.MustCompile(`^[a-zA-Z0-9+-.]*://[^/]*@%s:.*$`),
-		}
-
-		for _, re := range regexes {
-			if re.MatchString(fs) {
-				pass.Reportf(node.Pos(), "host:port in url should be constructed with net.JoinHostPort and not directly with fmt.Sprintf")
-				break
+		if p, f, ok := getCallExprFunction(callExpr); ok && p == "fmt" && f == "Sprintf" {
+			if err := checkForHostPortConstruction(callExpr); err != nil {
+				pass.Reportf(node.Pos(), err.Error())
 			}
 		}
 	})
 
 	return nil, nil
+}
+
+// getCallExprFunction returns the package and function name from a callExpr, if any.
+func getCallExprFunction(callExpr *ast.CallExpr) (pkg string, fn string, result bool) {
+	selector, ok := callExpr.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return "", "", false
+	}
+	gopkg, ok := selector.X.(*ast.Ident)
+	if !ok {
+		return "", "", false
+	}
+	return gopkg.Name, selector.Sel.Name, true
+}
+
+// getStringLiteral returns the value at a position if it's a string literal.
+func getStringLiteral(args []ast.Expr, pos int) (string, bool) {
+	if len(args) < pos + 1 {
+		return "", false
+	}
+
+	// Let's see if our format string is a string literal.
+	fsRaw, ok := args[pos].(*ast.BasicLit)
+	if !ok {
+		return "", false
+	}
+	if fsRaw.Kind == token.STRING && len(fsRaw.Value) >= 2 {
+		return fsRaw.Value[1 : len(fsRaw.Value)-1], true
+	} else {
+		return "", false
+	}
+}
+
+// checkForHostPortConstruction checks to see if a sprintf call looks like a URI with a port,
+// essentially scheme://%s:<something else>, or scheme://user:pass@%s:<something else>.
+//
+// Matching requirements:
+//		- Scheme as per RFC3986 is ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+//		- A format string substitution in the host portion, preceded by an optional username/password@
+//  	- A colon indicating a port will be specified
+func checkForHostPortConstruction(sprintf *ast.CallExpr) error {
+	fs, ok := getStringLiteral(sprintf.Args, 0)
+	if !ok {
+		return nil
+	}
+
+	regexes := []*regexp.Regexp{
+		regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+-.]*://%s:[^@]*$`),    // URL without basic auth user
+		regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+-.]*://[^/]*@%s:.*$`), // URL with basic auth
+	}
+
+	for _, re := range regexes {
+		if re.MatchString(fs) {
+			return fmt.Errorf("host:port in url should be constructed with net.JoinHostPort and not directly with fmt.Sprintf")
+		}
+	}
+
+	return nil
 }

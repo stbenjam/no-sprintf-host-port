@@ -6,15 +6,18 @@ import (
 )
 
 func _() {
-	_ = fmt.Sprintf("gopher://%s/foo", net.JoinHostPort("foo", "80"))
 
 	_ = fmt.Sprintf("postgres://%s:%s@127.0.0.1/%s", "foo", "bar", "baz")
 
-	_ = fmt.Sprintf("http://%s/foo", net.JoinHostPort("foo", "80"))
+	_ = fmt.Sprintf("http://api.%s/foo", "example.com")
 
 	_ = fmt.Sprintf("http://api.%s:6443/foo", "example.com")
 
-	_ = fmt.Sprintf("http://api.%s/foo", "example.com")
+	_ = fmt.Sprintf("http://%s/foo", net.JoinHostPort("foo", "80"))
+
+	_ = fmt.Sprintf("9invalidscheme://%s:%d", "myHost", 70)
+
+	_ = fmt.Sprintf("gopher://%s/foo", net.JoinHostPort("foo", "80"))
 
 	_ = fmt.Sprintf("telnet+ssl://%s/foo", net.JoinHostPort("foo", "80"))
 
@@ -27,6 +30,8 @@ func _() {
 	_ = fmt.Sprintf("gopher://%s:%d", "myHost", 70) // want "should be constructed with net.JoinHostPort"
 
 	_ = fmt.Sprintf("telnet+ssl://%s:%d", "myHost", 23) // want "should be constructed with net.JoinHostPort"
+
+	_ = fmt.Sprintf("weird3.6://%s:%d", "myHost", 23) // want "should be constructed with net.JoinHostPort"
 
 	_ = fmt.Sprintf("https://user@%s:%d", "myHost", 8443) // want "should be constructed with net.JoinHostPort"
 

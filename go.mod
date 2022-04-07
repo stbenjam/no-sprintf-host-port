@@ -1,4 +1,4 @@
-module github.com/stbenjam/go-sprintf-host-port
+module github.com/stbenjam/no-sprintf-host-port
 
 go 1.16
 
