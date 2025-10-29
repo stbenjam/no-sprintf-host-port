@@ -87,13 +87,13 @@ func checkForHostPortConstruction(sprintf *ast.CallExpr) error {
 		regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+-.]*://[^/]*@%s:.*$`), // URL with basic auth
 	}
 
-	for _, re := range regexes {
+	for idx, re := range regexes {
 		if !re.MatchString(fs) {
 			continue
 		}
 
-		if len(sprintf.Args) <= 3 {
-			// Only handle cases where the hostname and optionally the port are specified.
+		// Match without basic auth and only handle cases where the hostname and optionally the port are specified.
+		if idx == 0 && len(sprintf.Args) <= 3 {
 			arg, ok := getStringLiteral(sprintf.Args, 1)
 			if ok && !strings.Contains(arg, ":") {
 				continue

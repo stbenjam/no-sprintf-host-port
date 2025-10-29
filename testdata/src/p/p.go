@@ -33,13 +33,15 @@ func _() {
 
 	_ = fmt.Sprintf("weird3.6://%s:%d", "myHost", 23)
 
-	_ = fmt.Sprintf("https://user@%s:%d", "myHost", 8443)
+	_ = fmt.Sprintf("https://user@%s:%d", "myHost", 8443) // want "should be constructed with net.JoinHostPort"
 
 	_ = fmt.Sprintf("postgres://%s:%s@%s:5050/%s", "foo", "bar", "baz", "qux") // want "should be constructed with net.JoinHostPort"
 
 	_ = fmt.Sprintf("https://%s:%d", "myHost", 8443)
 
 	_ = fmt.Sprintf("https://%s:9211", "myHost")
+
+	_ = fmt.Sprintf("postgres://%s:%s@%s:5050/%s", "myHost") // want "should be constructed with net.JoinHostPort"
 
 	_ = fmt.Sprintf("https://%s:9211", "my:Host") // want "should be constructed with net.JoinHostPort"
 
